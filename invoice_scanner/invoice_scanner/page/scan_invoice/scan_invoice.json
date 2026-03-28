@@ -1,0 +1,19 @@
+{
+ "doctype": "Page",
+ "module": "Invoice Scanner",
+ "name": "scan-invoice",
+ "page_name": "scan-invoice",
+ "roles": [
+  {
+   "role": "Accounts User"
+  },
+  {
+   "role": "Accounts Manager"
+  },
+  {
+   "role": "System Manager"
+  }
+ ],
+ "standard": "Yes",
+ "title": "Scan Invoice"
+}
