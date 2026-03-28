@@ -1,5 +1,6 @@
 import re
 import json
+import time
 import requests
 import frappe
 
@@ -54,12 +55,23 @@ def scan_invoice(image_b64, media_type="image/jpeg"):
 		"generationConfig": {"maxOutputTokens": 1000, "temperature": 0.1},
 	}
 
-	try:
-		resp = requests.post(url, json=payload, timeout=60)
-		resp.raise_for_status()
-	except requests.exceptions.RequestException as e:
-		frappe.log_error(frappe.get_traceback(), "Gemini API request failed")
-		frappe.throw(f"Gemini API request failed: {e}")
+	resp = None
+	for attempt in range(3):
+		try:
+			resp = requests.post(url, json=payload, timeout=60)
+			if resp.status_code == 429:
+				retry_after = int(resp.headers.get("Retry-After", 2 ** (attempt + 1)))
+				time.sleep(retry_after)
+				continue
+			resp.raise_for_status()
+			break
+		except requests.exceptions.RequestException as e:
+			if attempt == 2:
+				frappe.log_error(frappe.get_traceback(), "Gemini API request failed")
+				frappe.throw(f"Gemini API request failed: {e}")
+			time.sleep(2 ** (attempt + 1))
+	else:
+		frappe.throw("Gemini API is rate-limiting this key. Please wait a moment and try again.")
 
 	response_text = resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
 
