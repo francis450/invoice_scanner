@@ -106,6 +106,7 @@ frappe.pages["scan-invoice"].on_page_load = function (wrapper) {
 		stream: null,
 		imageB64: null,
 		mediaType: "image/jpeg",
+		scanLog: null,
 	};
 
 	// ─── DOM references ────────────────────────────────────────────────────────
@@ -183,7 +184,8 @@ frappe.pages["scan-invoice"].on_page_load = function (wrapper) {
 					return;
 				}
 				var data = r.message;
-				if (data.customer) $customerField.value = data.customer;
+				state.scanLog = data.scan_log || null;
+				if (data.supplier) $customerField.value = data.supplier;
 				if (data.date)     $dateField.value     = data.date;
 				renderItemsTable(data.items || []);
 				show($previewSection);
@@ -199,18 +201,19 @@ frappe.pages["scan-invoice"].on_page_load = function (wrapper) {
 	function renderItemsTable(items) {
 		$tbody.innerHTML = "";
 		if (!items.length) {
-			addRow("", 1, 0, false);
+			addRow("", 1, 0, false, null);
 		} else {
 			items.forEach(function (item) {
-				addRow(item.item_name, item.qty, item.rate, item.uncertain);
+				addRow(item.item_name, item.qty, item.rate, item.uncertain, item.item_code || null);
 			});
 		}
 		updateAmounts();
 	}
 
-	function addRow(itemName, qty, rate, uncertain) {
+	function addRow(itemName, qty, rate, uncertain, itemCode) {
 		var tr = document.createElement("tr");
 		if (uncertain) tr.classList.add("row-uncertain");
+		tr.dataset.itemCode = itemCode || "";
 		tr.innerHTML = `
 			<td><input type="text"   class="col-name" value="${escHtml(itemName || "")}" placeholder="${__("Item name")}"></td>
 			<td><input type="number" class="col-qty"  value="${qty  || 1}"  min="0" step="any"></td>
@@ -257,7 +260,9 @@ frappe.pages["scan-invoice"].on_page_load = function (wrapper) {
 			var qty  = parseFloat(tr.querySelector(".col-qty").value);
 			var rate = parseFloat(tr.querySelector(".col-rate").value);
 			if (!name) { valid = false; return; }
-			rows.push({ item_name: name, qty: qty || 1, rate: rate || 0 });
+			var row = { item_name: name, qty: qty || 1, rate: rate || 0 };
+			if (tr.dataset.itemCode) row.item_code = tr.dataset.itemCode;
+			rows.push(row);
 		});
 
 		if (!valid || !rows.length) {
@@ -275,6 +280,7 @@ frappe.pages["scan-invoice"].on_page_load = function (wrapper) {
 				items: JSON.stringify(rows),
 				customer: $customerField.value.trim() || null,
 				posting_date: $dateField.value || null,
+				scan_log: state.scanLog || null,
 			},
 			callback: function (r) {
 				btn.disabled = false;
@@ -297,6 +303,7 @@ frappe.pages["scan-invoice"].on_page_load = function (wrapper) {
 		$tbody.innerHTML = "";
 		$previewImg.src = "";
 		state.imageB64 = null;
+		state.scanLog = null;
 		$video.style.display = "none";
 		wrapper.querySelector("#btn-capture").style.display = "none";
 		wrapper.querySelector("#btn-start-camera").style.display = "inline-block";

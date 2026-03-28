@@ -1,0 +1,142 @@
+{
+ "actions": [],
+ "autoname": "format:SCAN-{YYYY}-{MM}-{DD}-{#####}",
+ "creation": "2026-03-28 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "scan_datetime",
+  "user",
+  "gemini_model",
+  "cb_info",
+  "extracted_supplier",
+  "extracted_date",
+  "sales_invoice",
+  "sb_extraction",
+  "raw_extraction",
+  "matched_items",
+  "sb_stats",
+  "uncertain_count",
+  "unmatched_count",
+  "match_pass_failed",
+  "duration_ms"
+ ],
+ "fields": [
+  {
+   "default": "Now",
+   "fieldname": "scan_datetime",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Scan Datetime",
+   "reqd": 1
+  },
+  {
+   "default": "__user",
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "User",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "gemini_model",
+   "fieldtype": "Data",
+   "label": "Model"
+  },
+  {
+   "fieldname": "cb_info",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "extracted_supplier",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Extracted Supplier"
+  },
+  {
+   "fieldname": "extracted_date",
+   "fieldtype": "Date",
+   "label": "Extracted Date"
+  },
+  {
+   "fieldname": "sales_invoice",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Sales Invoice",
+   "options": "Sales Invoice"
+  },
+  {
+   "fieldname": "sb_extraction",
+   "fieldtype": "Section Break",
+   "label": "Extraction Results"
+  },
+  {
+   "fieldname": "raw_extraction",
+   "fieldtype": "Long Text",
+   "label": "Raw Extraction (Pass 1)"
+  },
+  {
+   "fieldname": "matched_items",
+   "fieldtype": "Long Text",
+   "label": "Matched Items (Pass 2)"
+  },
+  {
+   "fieldname": "sb_stats",
+   "fieldtype": "Section Break",
+   "label": "Statistics"
+  },
+  {
+   "fieldname": "uncertain_count",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Uncertain Items"
+  },
+  {
+   "fieldname": "unmatched_count",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Unmatched Items"
+  },
+  {
+   "fieldname": "match_pass_failed",
+   "fieldtype": "Check",
+   "label": "Match Pass Failed"
+  },
+  {
+   "fieldname": "duration_ms",
+   "fieldtype": "Int",
+   "label": "Duration (ms)"
+  }
+ ],
+ "links": [],
+ "modified": "2026-03-28 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Invoice Scanner",
+ "name": "Invoice Scan Log",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "All",
+   "write": 0
+  }
+ ],
+ "sort_field": "scan_datetime",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0
+}
