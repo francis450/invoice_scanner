@@ -7,10 +7,7 @@ import frappe
 
 def _gemini_text(prompt, api_key, model):
 	"""Single text-only Gemini call. Returns the raw response string."""
-	url = (
-		"https://generativelanguage.googleapis.com/v1beta/models/"
-		f"{model}:generateContent?key={api_key}"
-	)
+	url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
 	payload = {
 		"contents": [{"parts": [{"text": prompt}]}],
 		"generationConfig": {"maxOutputTokens": 2000, "temperature": 0},
@@ -35,12 +32,9 @@ def _match_items_to_catalogue(extracted_items, api_key, model):
 	if not catalogue:
 		return extracted_items, False
 
-	catalogue_lines = "\n".join(
-		f"{i.item_code} | {i.item_name}" for i in catalogue
-	)
+	catalogue_lines = "\n".join(f"{i.item_code} | {i.item_name}" for i in catalogue)
 	extracted_names = "\n".join(
-		f"{idx + 1}. {item.get('item_name', '')}"
-		for idx, item in enumerate(extracted_items)
+		f"{idx + 1}. {item.get('item_name', '')}" for idx, item in enumerate(extracted_items)
 	)
 
 	prompt = (
@@ -49,8 +43,8 @@ def _match_items_to_catalogue(extracted_items, api_key, model):
 		"Catalogue (item_code | item_name):\n" + catalogue_lines + "\n\n"
 		"Rules:\n"
 		"- Return ONLY a JSON array, one entry per extracted item, in the same order.\n"
-		"- Each entry: {\"item_code\": \"<code>\", \"item_name\": \"<catalogue name>\"}\n"
-		"- If no catalogue item is a reasonable match, use {\"item_code\": null, \"item_name\": \"<original extracted name>\"}\n"
+		'- Each entry: {"item_code": "<code>", "item_name": "<catalogue name>"}\n'
+		'- If no catalogue item is a reasonable match, use {"item_code": null, "item_name": "<original extracted name>"}\n'
 		"- Prefer exact or near-exact matches. Do not guess unrelated items."
 	)
 
@@ -92,10 +86,7 @@ def scan_invoice(image_b64, media_type="image/jpeg"):
 	"""
 	api_key = frappe.conf.get("gemini_api_key")
 	if not api_key:
-		frappe.throw(
-			"Gemini API key not configured. "
-			"Add 'gemini_api_key' to your site_config.json."
-		)
+		frappe.throw("Gemini API key not configured. Add 'gemini_api_key' to your site_config.json.")
 
 	prompt = (
 		"Extract all line items from this handwritten sales invoice. "
@@ -107,10 +98,7 @@ def scan_invoice(image_b64, media_type="image/jpeg"):
 	)
 
 	model = frappe.conf.get("gemini_model", "gemini-2.5-flash")
-	url = (
-		"https://generativelanguage.googleapis.com/v1beta/models/"
-		f"{model}:generateContent?key={api_key}"
-	)
+	url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
 	payload = {
 		"contents": [
 			{
@@ -120,7 +108,7 @@ def scan_invoice(image_b64, media_type="image/jpeg"):
 				]
 			}
 		],
-		"generationConfig": {"maxOutputTokens": 1000, "temperature": 0.1},
+		"generationConfig": {"maxOutputTokens": 4000, "temperature": 0.1},
 	}
 
 	t_start = time.time()
@@ -157,9 +145,7 @@ def scan_invoice(image_b64, media_type="image/jpeg"):
 		result = json.loads(response_text)
 	except json.JSONDecodeError:
 		frappe.log_error(f"Gemini raw response:\n{response_text}", "Gemini JSON parse error")
-		frappe.throw(
-			f"Gemini returned an unexpected response. Raw output:\n\n{response_text}"
-		)
+		frappe.throw(f"Gemini returned an unexpected response. Raw output:\n\n{response_text}")
 
 	raw_items_json = json.dumps(result.get("items", []))
 
@@ -170,18 +156,20 @@ def scan_invoice(image_b64, media_type="image/jpeg"):
 	duration_ms = int((time.time() - t_start) * 1000)
 	items = result.get("items", [])
 
-	log = frappe.get_doc({
-		"doctype": "Invoice Scan Log",
-		"gemini_model": model,
-		"extracted_supplier": result.get("supplier"),
-		"extracted_date": result.get("date"),
-		"raw_extraction": raw_items_json,
-		"matched_items": json.dumps(items),
-		"uncertain_count": sum(1 for i in items if i.get("uncertain")),
-		"unmatched_count": sum(1 for i in items if not i.get("item_code")),
-		"match_pass_failed": 1 if match_failed else 0,
-		"duration_ms": duration_ms,
-	})
+	log = frappe.get_doc(
+		{
+			"doctype": "Invoice Scan Log",
+			"gemini_model": model,
+			"extracted_supplier": result.get("supplier"),
+			"extracted_date": result.get("date"),
+			"raw_extraction": raw_items_json,
+			"matched_items": json.dumps(items),
+			"uncertain_count": sum(1 for i in items if i.get("uncertain")),
+			"unmatched_count": sum(1 for i in items if not i.get("item_code")),
+			"match_pass_failed": 1 if match_failed else 0,
+			"duration_ms": duration_ms,
+		}
+	)
 	log.insert(ignore_permissions=True)
 
 	result["scan_log"] = log.name
